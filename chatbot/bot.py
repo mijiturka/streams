@@ -1,3 +1,4 @@
+import argparse
 import logging
 import pathlib
 import socket
@@ -51,6 +52,14 @@ def parse(msg):
     return msg.split(f'PRIVMSG {channel} :')[1].strip()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description = 'Connects to twitch chat, looks for the !up command, increases the dumbometer'
+    )
+    parser.add_argument('dumbometer_ip')
+    args = parser.parse_args()
+
+    dumbometer_url = f"http://{args.dumbometer_ip}/up"
+
     logging.debug("starting")
 
     bot = Bot()
@@ -62,5 +71,5 @@ if __name__ == '__main__':
 
         if "PRIVMSG" in text and channel in text:
             if parse(text) == '!up':
-                logging.info("UP!")
-                requests.get(f"http://{dumbometer_ip}/up")
+                logging.info("!up")
+                requests.get(dumbometer_url)
