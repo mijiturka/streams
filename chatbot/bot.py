@@ -14,37 +14,41 @@ bot_username = "mayonesia"
 token = pathlib.Path('./token').read_text().strip()
 bot_password = f"oauth:{token}"
 
-logging.getLogger("irc.client")
-logging.basicConfig(level=logging.DEBUG)
 
-def parse(msg):
-    return msg.split('PRIVMSG #mayonesia :')[1].strip()
+logging.basicConfig(level=logging.DEBUG)
 
 class Bot:
 
     irc_socket = socket.socket()
 
     def __init__(self):
+        self.encoding = "UTF-8"
         self.irc_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    def send(self, channel, msg):
-        self.irc_socket.send(bytes("PRIVMSG " + channel + " " + msg + "\n", "UTF-8"))
+    def message(self, text):
+        self.irc_socket.send(bytes(text + "\n", self.encoding))
 
     def connect(self, server, port, channel, bot_nick, bot_pass):
-        print("Server connection: " + server)
+        logging.info(f"Connecting to server {server}")
         self.irc_socket.connect((server, port))
 
-        self.irc_socket.send(bytes("PASS " + bot_pass + "\n", "UTF-8"))
-        self.irc_socket.send(bytes("NICK " + bot_nick + "\n", "UTF-8"))
+        self.message(f"PASS {bot_pass}")
+        self.message(f"NICK {bot_nick}")
         time.sleep(2)
-        self.irc_socket.send(bytes("JOIN " + channel + "\n", "UTF-8"))
+        self.message(f"JOIN {channel}")
 
-    def response(self):
-        r = self.irc_socket.recv(2040).decode("UTF-8")
+    def send(self, channel, msg):
+        self.message(f"PRIVMSG {channel} {msg}")
+
+    def receive(self):
+        r = self.irc_socket.recv(2040).decode(self.encoding)
         if r.find('PING') != -1:
             # TODO don't hardcode what to PONG
-            self.irc_socket.send(bytes('PONG :tmi.twitch.tv' + '\r\n', "UTF-8"))
+            self.message('PONG :tmi.twitch.tv\r')
         return r
+
+def parse(msg):
+    return msg.split(f'PRIVMSG {channel} :')[1].strip()
 
 if __name__ == '__main__':
     logging.debug("starting")
@@ -53,10 +57,10 @@ if __name__ == '__main__':
     bot.connect(server_hostname, irc_port, channel, bot_username, bot_password)
 
     while True:
-        text = bot.response()
+        text = bot.receive()
         logging.debug(text)
 
         if "PRIVMSG" in text and channel in text:
             if parse(text) == '!up':
-                print("UP!")
+                logging.info("UP!")
                 requests.get(f"http://{dumbometer_ip}/up")
