@@ -1,6 +1,7 @@
 client_id
 secret
 token
+*.key
 
 venv
 __pycache__
