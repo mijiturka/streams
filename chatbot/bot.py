@@ -7,37 +7,40 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 defaults = {
-    "server_hostname": "irc.chat.twitch.tv",
-    "irc_port": 6667,
+    "server": "irc.chat.twitch.tv",
+    "port": 6667,
     "channel": "#mayonesia",
-    "bot_username": "mayonesia",
+    "nick": "mayonesia",
 }
 
 def default(value):
     return defaults[value]
+
+def get_token():
+    return pathlib.Path('./token').read_text().strip()
 
 class Bot:
 
     irc_socket = socket.socket()
 
     def __init__(self,
-        server_hostname=default('server_hostname'),
-        irc_port=default('irc_port'),
+        server=default('server'),
+        port=default('port'),
         channel=default('channel'),
-        bot_username=default('bot_username'),
+        nick=default('nick'),
         token=None,
-        bot_password=None,
+        password=None,
     ):
 
-        self.server_hostname = server_hostname
-        self.irc_port = irc_port
+        self.server = server
+        self.port = port
 
         self.channel = channel
 
-        self.bot_username = bot_username
+        self.nick = nick
         if token is None:
-            self.token = pathlib.Path('./token').read_text().strip()
-        self.bot_password = f"oauth:{self.token}"        
+            self.token = get_token()
+        self.password = f"oauth:{self.token}"
 
         self.irc_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.encoding = "UTF-8"
@@ -46,11 +49,11 @@ class Bot:
         self.irc_socket.send(bytes(text + "\n", self.encoding))
 
     def connect(self):
-        logger.info(f"Connecting to server {self.server_hostname}")
-        self.irc_socket.connect((self.server_hostname, self.irc_port))
+        logger.info(f"Connecting to server {self.server}")
+        self.irc_socket.connect((self.server, self.port))
 
-        self.message(f"PASS {self.bot_password}")
-        self.message(f"NICK {self.bot_username}")
+        self.message(f"PASS {self.password}")
+        self.message(f"NICK {self.nick}")
         time.sleep(2)
         self.message(f"JOIN {self.channel}")
 
