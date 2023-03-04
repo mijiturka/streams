@@ -31,7 +31,7 @@ class Bot:
         token=None,
         password=None,
     ):
-
+        # Connection set-up
         self.server = server
         self.port = port
 
@@ -42,6 +42,10 @@ class Bot:
             self.token = get_token()
         self.password = f"oauth:{self.token}"
 
+        # This bot will only listen for one command, and perform one action as a result
+        self._listening = False
+
+        # Other stuff bot needs
         self.irc_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.encoding = "UTF-8"
 
@@ -71,7 +75,18 @@ class Bot:
         return msg.split(f'PRIVMSG {self.channel} :')[1].strip()
 
     def listen_and_react(self, command, action):
-        while True:
+        logger.debug("listen_and_react() called")
+        # Shouldn't really happen because we're busy-looping; so can't get to a second function call.
+        # Placing this here just in case I forget about this when making changes
+        if self._listening:
+            raise Exception(
+                "Bot is not a multifuncitonal pony. "
+                "It's already listening for a command. "
+                "call .stop_listening() first if you want to make it listen for something else."
+            )
+        self._listening = True
+
+        while self._listening:
             text = self.receive()
             logger.debug(text)
 
@@ -79,3 +94,6 @@ class Bot:
                 if self.parse(text) == command:
                     logger.info(command)
                     action()
+
+    def stop_listening(self):
+        self._listening = False
