@@ -19,6 +19,39 @@ def default(value):
 def get_token():
     return pathlib.Path('./token').read_text().strip()
 
+
+class Message:
+    def __init__(self, channel, msg):
+        sender, payload = [part.strip() for part in msg.split(f'PRIVMSG {channel} :')]
+        self.sender = sender
+        self.payload = payload
+
+        self.command = None
+        self.arguments = None
+
+        if payload.startswith('!'):
+            try:
+                command, arguments = [part.strip() for part in payload.split(' ', 1)]
+                if arguments == "":
+                    arguments = None
+                self.command = command
+                self.arguments = arguments
+            except ValueError:
+                # this command has no arguments
+                self.command = payload
+                self.arguments = None
+
+    def __repr__(self):
+        return str({
+            'sender': self.sender,
+            'command': self.command,
+            'arguments': self.arguments,
+            'payload': self.payload
+        })
+
+    def __str__(self):
+        return f"{self.sender}:_{self.command}_{self.arguments}"
+
 class Bot:
 
     irc_socket = socket.socket()
@@ -71,10 +104,7 @@ class Bot:
             self.message('PONG :tmi.twitch.tv\r')
         return r
 
-    def parse(self, msg):
-        return msg.split(f'PRIVMSG {self.channel} :')[1].strip()
-
-    def listen_and_react(self, action, command, arguments=False):
+    def listen_and_react(self, action, command):
         logger.debug("listen_and_react() called")
         # Shouldn't really happen because we're busy-looping; so can't get to a second function call.
         # Placing this here just in case I forget about this when making changes
@@ -91,21 +121,12 @@ class Bot:
             logger.debug(text)
 
             if "PRIVMSG" in text and self.channel in text:
-                msg = self.parse(text)
-                if not arguments:
-                    if msg == command:
-                        logger.info(f"command={command}")
-                        action()
-                else:
-                    if msg.startswith(command):
-                        logger.info(f"command={command}")
-                        arguments = msg.split(command)[1]
-                        if arguments == "":
-                            logger.warning(f"No arguments for command {command}")
-                        arguments = arguments.strip()
-                        logger.info(f"arguments={arguments}")
-                        
-                        action(arguments)
+                msg = Message(self.channel, text)
+                logging.debug(msg)
+
+                if msg.command == command:
+                    logger.info(f"command={msg.command}")
+                    action(msg)
 
     def stop_listening(self):
         self._listening = False

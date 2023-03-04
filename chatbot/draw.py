@@ -9,8 +9,8 @@ import bot
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def draw(text):
-    logging.info(f"Time to draw {text}")
+def draw(message):
+    logging.info(f"{message.sender} asked to draw {message.arguments}")
 
 if __name__ == '__main__':
     logger.debug("starting")
@@ -21,5 +21,4 @@ if __name__ == '__main__':
     ai_bot.listen_and_react(
         action=draw,
         command="!ai",
-        arguments=True,
     )

@@ -25,6 +25,7 @@ if __name__ == '__main__':
     up_bot.connect()
 
     up_bot.listen_and_react(
-        action=lambda: requests.get(dumbometer_url),
+        # Disregard message details and just go for it
+        action=lambda msg: requests.get(dumbometer_url),
         command="!up",
     )
