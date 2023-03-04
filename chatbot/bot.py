@@ -74,7 +74,7 @@ class Bot:
     def parse(self, msg):
         return msg.split(f'PRIVMSG {self.channel} :')[1].strip()
 
-    def listen_and_react(self, command, action):
+    def listen_and_react(self, action, command, arguments=False):
         logger.debug("listen_and_react() called")
         # Shouldn't really happen because we're busy-looping; so can't get to a second function call.
         # Placing this here just in case I forget about this when making changes
@@ -91,9 +91,21 @@ class Bot:
             logger.debug(text)
 
             if "PRIVMSG" in text and self.channel in text:
-                if self.parse(text) == command:
-                    logger.info(command)
-                    action()
+                msg = self.parse(text)
+                if not arguments:
+                    if msg == command:
+                        logger.info(f"command={command}")
+                        action()
+                else:
+                    if msg.startswith(command):
+                        logger.info(f"command={command}")
+                        arguments = msg.split(command)[1]
+                        if arguments == "":
+                            logger.warning(f"No arguments for command {command}")
+                        arguments = arguments.strip()
+                        logger.info(f"arguments={arguments}")
+                        
+                        action(arguments)
 
     def stop_listening(self):
         self._listening = False
