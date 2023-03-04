@@ -24,13 +24,7 @@ if __name__ == '__main__':
     up_bot = bot.Bot()
     up_bot.connect()
 
-    while True:
-        text = up_bot.receive()
-        logger.debug(text)
-
-        # TODO move to bot.py
-        channel = "#mayonesia"
-        if "PRIVMSG" in text and channel in text:
-            if up_bot.parse(text) == '!up':
-                logger.info("!up")
-                requests.get(dumbometer_url)
+    up_bot.listen_and_react(
+        command="!up",
+        action=lambda: requests.get(dumbometer_url)
+    )

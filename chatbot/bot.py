@@ -69,3 +69,13 @@ class Bot:
 
     def parse(self, msg):
         return msg.split(f'PRIVMSG {self.channel} :')[1].strip()
+
+    def listen_and_react(self, command, action):
+        while True:
+            text = self.receive()
+            logger.debug(text)
+
+            if "PRIVMSG" in text and self.channel in text:
+                if self.parse(text) == command:
+                    logger.info(command)
+                    action()
