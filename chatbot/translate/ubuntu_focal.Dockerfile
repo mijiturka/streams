@@ -46,4 +46,14 @@ RUN translateLocally -d nb-en-tiny
 RUN translateLocally -d nn-en-tiny
 RUN translateLocally -d pl-en-tiny
 
+RUN apt-get -y install python3-pip
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY lid.176.ftz .
+
+COPY identify.py .
+COPY text_to_translate.md .
+
+RUN cat text_to_translate.md | translateLocally -m $(python3 identify.py)-en-tiny
+
 CMD tail -f /dev/null

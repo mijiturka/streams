@@ -3,6 +3,7 @@ Program to identify language of a given string
 """
 
 import fasttext
+import pathlib
 
 class LanguageIdentification:
     """
@@ -25,6 +26,7 @@ class LanguageIdentification:
         return predictions
 
 if __name__ == '__main__':
-    LANGUAGE = LanguageIdentification()
-    LANG = LANGUAGE.predict_lang("むかし、武田信玄(たけだしんげん)の家来(けらい)に、主水頭守清(もんどのかみもりきよ)という医者(いしゃ)がいました。")
-    print(LANG)
+    language = LanguageIdentification().predict_lang(
+        pathlib.Path("text_to_translate.md").read_text().strip()
+    )
+    print(language[0][0].replace("__label__", ""))
